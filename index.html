@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TIGER GOLD | قائمة أسعار </title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap');
+        
+        body {
+            font-family: 'Cairo', sans-serif;
+            background: linear-gradient(135deg, #fcf6eb 0%, #e3ceab 100%);
+            background-attachment: fixed;
+            min-height: 100vh;
+        }
+
+        .table-header {
+            background: linear-gradient(to right, #c19b77, #a67c52);
+            position: sticky;
+            top: 0;
+            z-index: 40;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        .product-row {
+            background: linear-gradient(to right, #a07a58, #865f3d);
+        }
+        
+        .image-clickable {
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        
+        .image-clickable:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.4);
+        }
+
+        .modal-content {
+            animation: fadeIn 0.3s ease-out forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .nav-btn {
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.3s;
+        }
+    </style>
+</head>
+<body class="p-2 sm:p-6 pb-20 text-right">
+
+    <div class="max-w-4xl mx-auto">
+        <!-- ترويسة الصفحة -->
+        <div class="flex flex-col items-center mb-6 bg-white/40 p-6 rounded-3xl shadow-sm backdrop-blur-sm border border-white/50 text-center">
+            <h1 class="text-4xl sm:text-6xl font-black text-[#6b4c30] mb-2 tracking-tight">TIGER GOLD</h1>
+            <p class="text-[#865f3d] font-bold mb-4">قائمة الأسعار</p>
+            
+            <!-- خانة البحث -->
+            <div class="relative w-full max-w-md">
+                <input type="text" id="searchInput" onkeyup="filterProducts()" 
+                    placeholder="🔍 ابحث عن اسم الصنف..." 
+                    class="w-full p-4 rounded-2xl outline-none border-2 border-[#c19b77] text-right font-bold text-[#6b4c30] shadow-md focus:ring-4 focus:ring-[#c19b77]/20 transition-all">
+            </div>
+        </div>
+
+        <!-- رأس الجدول -->
+        <div class="table-header flex items-center justify-between text-white rounded-t-2xl p-3 text-sm sm:text-lg font-bold shadow-lg">
+            <div class="w-[8%] text-center">#</div>
+            <div class="w-[24%] text-center"> العدد داخل العبوة</div>
+            <div class="w-[20%] text-center">السعر</div>
+            <div class="w-[33%] text-center">الصنف</div>
+            <div class="w-[15%] text-center">صورة</div>
+        </div>
+
+        <!-- حاوية المنتجات -->
+        <div id="products-container" class="space-y-1">
+            <!-- البيانات تظهر هنا عبر JavaScript -->
+        </div>
+
+        <!-- رسالة لا توجد نتائج -->
+        <div id="noResults" class="hidden text-center p-10 text-[#6b4c30] font-bold bg-white/20 rounded-3xl mt-4">
+            ❌ لم يتم العثور على نتائج..
+        </div>
+    </div>
+
+    <!-- نافذة تكبير الصورة -->
+    <div id="image-modal" class="fixed inset-0 bg-black/95 z-50 hidden flex justify-center items-center backdrop-blur-md p-4" onclick="closeModal()">
+        <div class="relative w-full max-w-2xl flex flex-col items-center modal-content" onclick="event.stopPropagation()">
+            <button onclick="closeModal()" class="absolute -top-14 left-0 text-white text-lg font-bold bg-white/10 px-4 py-2 rounded-full hover:bg-red-600 border border-white/20 transition-all">إغلاق ×</button>
+            <div id="nav-controls" class="absolute inset-y-0 w-full flex justify-between items-center px-2 pointer-events-none">
+                <button onclick="prevImg()" class="nav-btn pointer-events-auto">❮</button>
+                <button onclick="nextImg()" class="nav-btn pointer-events-auto">❯</button>
+            </div>
+            <img id="enlarged-image" src="" class="max-w-full max-h-[70vh] rounded-2xl shadow-2xl border-4 border-[#c19b77] object-contain bg-white mb-4">
+            <div class="text-center bg-black/50 p-4 rounded-2xl border border-white/10 backdrop-blur-sm w-full max-w-md">
+                <h3 id="enlarged-title" class="text-yellow-100 text-2xl font-bold"></h3>
+                <p id="image-counter" class="text-white/70 text-sm mt-2 font-bold"></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const products = [
+            { id: 1, count: "50 قطعة", pkg: "في الربطة", price: "45 جـ", unit: "للقطعة", name: "  صدر حريمي بيور", img: ["images/1_2.jpg"] },
+            { id: 2, count: "50 قطعة", pkg: "في الربطة", price: "34 جـ", unit: "للقطعة", name: "  صدر  حريمي 1", img: ["images/1.jpg","images/2_1.jpg"] },
+            { id: 3, count: "50 قطعة", pkg: "في الربطة", price: "26 جـ", unit: "للقطعة", name: "  صدر حريمي 2", img: ["images/2.png"] },
+            { id: 4, count: "50 قطعة", pkg: "في الربطة", price: "25 جـ", unit: "للقطعة", name: "صدر حريمي الوان", img: ["images/3.jpg","images/3_1.png","images/3_2.png","images/3_3.png"] },
+            { id: 5, count: "25 قطعة", pkg: "في الربطة", price: "32 جـ", unit: "للقطعة", name: "صدر عروسة ابيض", img: ["images/5.jpg"] },
+            { id: 6, count: "50 قطعة", pkg: "في الربطة", price: "32 جـ", unit: "للقطعة", name: "صدر رجالي ابيض", img: ["images/6.png"] },
+            { id: 7, count: "50 قطعة", pkg: "في الربطة", price: "27 جـ", unit: "للقطعة", name: "صدر رجالي اسود", img: ["images/7.jpg"] },
+            { id: 8, count: "50 قطعة", pkg: "في الربطة", price: "19 جـ", unit: "للقطعة", name: "صدر اطفال كبير ابيض  ", img: ["images/8.jpg"] },
+            { id: 9, count: "50 قطعة", pkg: "في الربطة", price: "18 جـ", unit: "للقطعة", name: "صدر اطفال كبير الوان  ", img: ["images/9.jpg","images/9_1.jpg","images/9_2.jpg","images/9_3.png"] },
+            { id: 10, count: "50 قطعة", pkg: "في الربطة", price: "18 جـ", unit: "للقطعة", name: " صدر اطفال صغير ابيض ", img: ["images/10.png"] },
+            { id: 11, count: "50 قطعة", pkg: "في الربطة", price: "17 جـ", unit: "للقطعة", name: " صدر اطفال صغير الوان ", img: ["images/11.jpg","images/11_1.png","images/11_2.jpg","images/11_3.jpg"] },
+            { id: 12, count: "300 رف", pkg: "في الكرتونة", price: "7 جـ", unit: "للقطعة", name: " رف سيلات 10*10 ", img: ["images/12.jpg"] },
+            { id: 13, count: "300 رف", pkg: "في الكرتونة", price: "11 جـ", unit: "للقطعة", name: "رف سيلات 10*20 ", img: ["images/13.png"] },
+            { id: 14, count: "110 دستة", pkg: "في الكرتونة", price: "30 جـ", unit: "للدستة", name: "طرحة مربعة  ", img: ["images/14.png","images/14_1.jpg"] },
+            { id: 15, count: "150 دستة", pkg: "في الكرتونة", price: "22 جـ", unit: "للدستة", name: "طرحة كريستال  ", img: ["images/15.jpg","images/15_1.jpg"] },
+            { id: 16, count: "150 دستة", pkg: "في الكرتونة", price: "18 جـ", unit: "للدستة", name: "طرحة الوان  ", img: ["images/16.jpg"] },
+            { id: 17, count: "150 دستة", pkg: "في الكرتونة", price: "18 جـ", unit: "للدستة", name: "شبشب هيلب  ", img: ["images/17.jpg","images/17_1.jpg","images/17_2.jpg"] },
+            { id: 18, count: "130 دستة", pkg: "في الكرتونة", price: "14 جـ", unit: "للدستة", name: "شبشب صباع  ", img: ["images/18.png","images/18_1.png","images/18_2.png"] },
+            { id: 19, count: "600 قطعة", pkg: "في الكرتونة", price: "4 جـ", unit: "للقطعة", name: " شبشب دبابة ", img: ["images/19.png","images/19_1.jpg"] },
+            { id: 20, count: "10 دستة", pkg: "في الكرتونة", price: "55 جـ", unit: "للدستة", name: " شماعة كتف اسود ", img: ["images/20.jpg"] },
+            { id: 21, count: "40 دستة", pkg: "في الكرتونة", price: "55 جـ", unit: "للدستة", name: " شماعة كتف اطفال بيور ", img: ["images/21.jpg","images/21_1.jpg"] },
+            { id: 22, count: "40 دستة", pkg: "في الكرتونة", price: "35 جـ", unit: "للدستة", name: "  شماعة كتف اطفال اسود", img: ["images/22.png"] },
+            { id: 23, count: "170 قطعة", pkg: "في الكرتونة", price: "13 جـ", unit: "للقطعة", name: "شماعة براة شفاف ", img: ["images/23.webp","images/23_1.jpg"] },
+            { id: 24, count: "120 قطعة", pkg: "في الكرتونة", price: "8.5 جـ", unit: "للقطعة", name: "شماعة عضم بيج هوك عادي ", img: ["images/24.jpg"] },
+            { id: 25, count: "150 قطعة", pkg: "في الكرتونة", price: "8 جـ", unit: "للقطعة", name: "شماعة عضم بيج بدون هوك ", img: ["images/25.jpg"] },
+            { id: 26, count: "120 قطعة", pkg: "في الكرتونة", price: "8 جـ", unit: "للقطعة", name: "شماعة عضم اسود هوك عادي ", img: ["images/26.png"] },
+            { id: 27, count: "150 قطعة", pkg: "في الكرتونة", price: "7.5 جـ", unit: "للقطعة", name: "شماعة عضم اسود بدون هوك ", img: ["images/27.jpg"] },
+            { id: 28, count: "220 قطعة", pkg: "في الكرتونة", price: "7 جـ", unit: "للقطعة", name: "شماعة مشبك 30 سم تايجر ", img: ["images/28.jpg","images/28_1.jpg","images/28_2.jpg"] },
+            { id: 29, count: "300 قطعة", pkg: "في الكرتونة", price: "11 جـ", unit: "للقطعة", name: "شماعة مشبك 30 سم اسود ", img: ["images/29.png","images/29_1.jpg"] },
+            { id: 30, count: "600 قطعة", pkg: "في الكرتونة", price: "7 جـ", unit: "للقطعة", name: "شماعة اندر كريستال ", img: ["images/30.png"] },
+            { id: 31, count: "360 قطعة", pkg: "في الكرتونة", price: "12.5 جـ", unit: "للقطعة", name: "شماعة ايس كاب كريستال ", img: ["images/31.jpg"] },
+            { id: 32, count: "360 قطعة", pkg: "في الكرتونة", price: "9 جـ", unit: "للقطعة", name: "شماعة ايس كاب بلاستيك ", img: ["images/32.jpg"] },
+            { id: 33, count: "200 قطعة", pkg: "في الكرتونة", price: "12 جـ", unit: "للقطعة", name: "حامل حذاء موبيل  ", img: ["images/33.png","images/33_1.png"] },
+            { id: 34, count: "12 دستة", pkg: "في الكيس", price: "80 جـ", unit: "للدستة", name: "شماعة فانوس ", img: ["images/34.jpg"] },
+            { id: 35, count: "150 قطعة", pkg: "في الكرتونة", price: "17 جـ", unit: "للقطعة", name: "مشبك بار مستورد بيج  ", img: ["images/35.png"] },
+            { id: 36, count: "150 قطعة", pkg: "في الكرتونة", price: "13.5 جـ", unit: "للقطعة", name: "مشبك بار بلاستيك بيج  ", img: ["images/36.png"] },
+            { id: 37, count: "150 قطعة", pkg: "في الكرتونة", price: "16 جـ", unit: "للقطعة", name: "مشبك بار مستورد اسود  ", img: ["images/37.png"] },
+            { id: 38, count: "400 قطعة", pkg: "في الكيس", price: "8 جـ", unit: "للقطعة", name: "شماعة توب ", img: ["images/38.jpg","images/38_1.png"] },
+            { id: 39, count: "25 دستة", pkg: "في الكيس", price: "100 جـ", unit: "للدستة", name: "شماعة قميص كبيرة", img: ["images/39.png"] },
+            { id: 40, count: "25 دستة", pkg: "في الكيس", price: "98 جـ", unit: "للدستة", name: "شماعة قميص صغيرة ", img: ["images/40.png"] },
+            { id: 41, count: "300 قطعة", pkg: "في الكيس", price: "18 جـ", unit: "للقطعة", name: "سلسلة حلقات ", img: ["images/41.jpg","images/41_1.jpg"] },
+            { id: 42, count: "300 قطعة", pkg: "في الكيس", price: "22 جـ", unit: "للقطعة", name: "سلسلة بلاستيك هوك حديد مقفول ", img: ["images/42.jpg","images/42_1.jpg"] },
+            { id: 43, count: "500 قطعة", pkg: "في الكيس", price: "3.25 جـ", unit: "للقطعة", name: "حامل شريط بلاستيك  ", img: ["images/43.png"] }
+        ];
+
+        let activeProduct = null;
+        let activeImgIdx = 0;
+
+        function renderProducts(data) {
+            const list = document.getElementById('products-container');
+            list.innerHTML = '';
+            
+            data.forEach(p => {
+                const row = document.createElement('div');
+                row.className = 'product-row flex items-center justify-between text-white p-2 sm:p-3 text-sm sm:text-base font-bold shadow-sm';
+                
+                row.innerHTML = `
+                    <div class="w-[8%] text-center bg-black/30 rounded py-1 text-yellow-400 font-black text-xs">${p.id}</div>
+                    
+                    <div class="w-[24%] text-center flex flex-col leading-tight border-r border-white/10">
+                        <span class="text-yellow-100">${p.count}</span>
+                        <span class="text-[10px] sm:text-xs opacity-70 font-normal italic">${p.pkg}</span>
+                    </div>
+                    
+                    <div class="w-[20%] text-center flex flex-col leading-tight border-r border-white/10">
+                        <span class="text-white text-[13px] sm:text-xl font-black">${p.price}</span>
+                        <span class="text-[10px] sm:text-xs text-yellow-300 opacity-90 font-normal">${p.unit}</span>
+                    </div>
+                    
+                    <div class="w-[33%] text-center pr-1 sm:pr-2 leading-tight border-r border-white/10 text-[11px] sm:text-lg">
+                        ${p.name}
+                    </div>
+                    
+                    <div class="w-[15%] flex justify-center border-r border-white/10">
+                        <img src="${p.img[0]}" 
+                             onerror="this.src='https://placehold.co/100?text=TIGER'" 
+                             onclick="startGallery(${p.id})"
+                             class="image-clickable w-10 h-10 sm:w-16 sm:h-16 object-cover rounded-lg border-2 border-white/30 bg-white">
+                    </div>
+                `;
+                list.appendChild(row);
+            });
+        }
+
+        function startGallery(id) {
+            activeProduct = products.find(p => p.id === id);
+            activeImgIdx = 0;
+            refreshModal();
+            document.getElementById('image-modal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function refreshModal() {
+            const img = document.getElementById('enlarged-image');
+            const title = document.getElementById('enlarged-title');
+            const counter = document.getElementById('image-counter');
+            const navs = document.getElementById('nav-controls');
+            img.src = activeProduct.img[activeImgIdx];
+            title.innerText = activeProduct.name;
+            if (activeProduct.img.length > 1) {
+                navs.classList.remove('hidden');
+                counter.innerText = `الصورة ${activeImgIdx + 1} من ${activeProduct.img.length}`;
+            } else {
+                navs.classList.add('hidden');
+                counter.innerText = '';
+            }
+        }
+
+        function nextImg() {
+            activeImgIdx = (activeImgIdx + 1) % activeProduct.img.length;
+            refreshModal();
+        }
+
+        function prevImg() {
+            activeImgIdx = (activeImgIdx - 1 + activeProduct.img.length) % activeProduct.img.length;
+            refreshModal();
+        }
+
+        function closeModal() {
+            document.getElementById('image-modal').classList.add('hidden');
+            document.body.style.overflow = 'auto';
+        }
+
+        function filterProducts() {
+            const val = document.getElementById('searchInput').value.toLowerCase();
+            const filtered = products.filter(p => p.name.toLowerCase().includes(val));
+            document.getElementById('noResults').classList.toggle('hidden', filtered.length > 0);
+            renderProducts(filtered);
+        }
+
+        renderProducts(products);
+    </script>
+</body>
+</html>
